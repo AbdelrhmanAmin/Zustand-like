@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useMemo } from "react";
+import { useSyncExternalStoreWithSelector } from "use-sync-external-store/shim/with-selector";
 import createStore, { Initializer, StoreApi } from "../Vanilla/createStore";
 type Selector<T> = (state: T) => any;
 
@@ -15,13 +16,15 @@ export type UseBoundStore<S extends ReadonlyStoreApi<unknown>> = {
 } & S;
 
 function useStore<T>(api: ReadonlyStoreApi<T>, selector: Selector<T>): T {
-  const [, forceUpdate] = React.useReducer((s) => s + 1, 0);
+  const slice = useSyncExternalStoreWithSelector(
+    api.subscribe,
+    api.getState,
+    api.getInitialState,
+    selector
+  );
 
-  React.useEffect(() => {
-    const unsubscribe = api.subscribe(forceUpdate);
-    return () => unsubscribe();
-  }, []);
-  return selector(api.getState());
+  React.useDebugValue(slice);
+  return slice;
 }
 
 function create<T>(createState: Initializer<T>) {
@@ -32,3 +35,31 @@ function create<T>(createState: Initializer<T>) {
 }
 
 export { create };
+
+/*
+
+export function useStore<TState, StateSlice>(
+  api: StoreApi<TState>,
+  selector: (state: TState) => StateSlice = identity as any,
+) {
+  const slice = React.useSyncExternalStore(
+    api.subscribe,
+    () => selector(api.getState()),
+    () => selector(api.getInitialState()),
+  )
+  React.useDebugValue(slice)
+  return slice
+}
+
+const createImpl = <T>(createState: Initializer<T>) => {
+  const api = createStore(createState);
+
+  const useBoundStore: any = (selector?: any) => useStore(api, selector);
+
+  Object.assign(useBoundStore, api);
+
+  return useBoundStore;
+};
+
+
+*/
