@@ -1,7 +1,6 @@
 import React, { useMemo } from "react";
 import { useSyncExternalStoreWithSelector } from "use-sync-external-store/shim/with-selector";
 import createStore, { Initializer, StoreApi } from "../Vanilla/createStore";
-type Selector<T> = (state: T) => any;
 
 type ExtractState<S> = S extends { getState: () => infer T } ? T : never;
 
@@ -10,12 +9,12 @@ type ReadonlyStoreApi<T> = Pick<
   "getState" | "getInitialState" | "subscribe"
 >;
 
-export type UseBoundStore<S extends ReadonlyStoreApi<unknown>> = {
-  (): ExtractState<S>;
-  <U>(selector: (state: ExtractState<S>) => U): U;
-} & S;
+const identity = <T,>(x: T) => x;
 
-function useStore<T>(api: ReadonlyStoreApi<T>, selector: Selector<T>): T {
+export function useStore<T, StateSlice>(
+  api: ReadonlyStoreApi<T>,
+  selector: (state: T) => StateSlice = identity as any
+) {
   const slice = useSyncExternalStoreWithSelector(
     api.subscribe,
     api.getState,
@@ -27,9 +26,16 @@ function useStore<T>(api: ReadonlyStoreApi<T>, selector: Selector<T>): T {
   return slice;
 }
 
-function create<T>(createState: Initializer<T>) {
+export type UseBoundStore<S extends ReadonlyStoreApi<unknown>> = {
+  (): ExtractState<S>;
+  <U>(selector: (state: ExtractState<S>) => U): U;
+} & S;
+
+function create<T>(
+  createState: Initializer<T>
+): UseBoundStore<ReadonlyStoreApi<T>> {
   const api = createStore(createState);
-  const useStoreSlice = (selector: Selector<T>) => useStore(api, selector);
+  const useStoreSlice: any = (selector?: any) => useStore(api, selector);
   Object.assign(useStoreSlice, api); // assign api methods to useStoreSlice
   return useStoreSlice;
 }

@@ -1,12 +1,20 @@
 {
+  "scripts": {
+    "test": "vitest"
+  },
   "dependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "use-sync-external-store": "^1.4.0"
   },
   "devDependencies": {
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/react": "^16.1.0",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
-    "@types/use-sync-external-store": "^0.0.6"
+    "@types/use-sync-external-store": "^0.0.6",
+    "jsdom": "^25.0.1",
+    "vitest": "^2.1.8"
   }
 }
